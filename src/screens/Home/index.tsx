@@ -1,3 +1,4 @@
+import { useNavigation } from '@react-navigation/native';
 import React from 'react';
 import { RFValue } from 'react-native-responsive-fontsize';
 
@@ -7,6 +8,8 @@ import { Car } from '../../components/Car';
 import { Container, Header, TotalCars, CarList } from './styles';
 
 export const Home: React.FC = () => {
+  const navigation = useNavigation();
+
   const car = {
     id: '1',
     brand: 'Audi',
@@ -14,6 +17,11 @@ export const Home: React.FC = () => {
     rent: { period: 'Ao dia', price: 120 },
     thumbnail: 'https://freepngimg.com/thumb/audi/35227-5-audi-rs5-red.png',
   };
+
+  function handleCarDetails() {
+    navigation.navigate('CarDetails');
+  }
+
   return (
     <Container>
       <Header>
@@ -24,7 +32,7 @@ export const Home: React.FC = () => {
       <CarList
         data={[1, 2, 3, 4, 5, 6, 7]}
         keyExtractor={item => item}
-        renderItem={() => <Car car={car} />}
+        renderItem={() => <Car car={car} onPress={handleCarDetails} />}
       />
     </Container>
   );

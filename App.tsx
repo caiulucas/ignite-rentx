@@ -11,11 +11,9 @@ import { ThemeProvider } from 'styled-components';
 
 import AppLoading from 'expo-app-loading';
 import { StatusBar } from 'expo-status-bar';
-import { Home } from './src/screens/Home';
+
 import theme from './src/styles/theme';
-import { CarDetails } from './src/screens/Details/CarDetails';
-import { Scheduling } from './src/screens/Scheduling';
-import { SchedulingDetails } from './src/screens/Details/SchedulingDetails';
+import { Routes } from './src/routes';
 
 export const App: React.FC = () => {
   const [fontsIsLoaded] = useFonts({
@@ -31,7 +29,7 @@ export const App: React.FC = () => {
   return (
     <ThemeProvider theme={theme}>
       <StatusBar style="auto" />
-      <SchedulingDetails />
+      <Routes />
     </ThemeProvider>
   );
 };

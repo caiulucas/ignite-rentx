@@ -2,17 +2,19 @@ import React from 'react';
 import { Feather } from '@expo/vector-icons';
 
 import { useTheme } from 'styled-components';
-import { BorderlessButtonProps } from 'react-native-gesture-handler';
+import { useNavigation } from '@react-navigation/native';
 import { Container } from './styles';
 
-interface BackButtonProps extends BorderlessButtonProps {
+interface BackButtonProps {
   color?: string;
 }
 
-export const BackButton: React.FC<BackButtonProps> = ({ color, ...rest }) => {
+export const BackButton: React.FC<BackButtonProps> = ({ color }) => {
   const theme = useTheme();
+  const { goBack } = useNavigation();
+
   return (
-    <Container {...rest}>
+    <Container onPress={goBack}>
       <Feather
         name="chevron-left"
         size={24}

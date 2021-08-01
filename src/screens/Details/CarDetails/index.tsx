@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigation } from '@react-navigation/native';
 import { Accessory } from '../../../components/Accessory';
 import { BackButton } from '../../../components/BackButton';
 import { ImageSlider } from '../../../components/ImageSlider';
@@ -29,6 +30,12 @@ import { About } from './styles';
 import { Button } from '../../../components/Button';
 
 export const CarDetails: React.FC = () => {
+  const { navigate } = useNavigation();
+
+  function handleConfirmRental() {
+    navigate('Scheduling');
+  }
+
   return (
     <Container>
       <Header>
@@ -73,7 +80,10 @@ export const CarDetails: React.FC = () => {
       </Content>
 
       <Footer>
-        <Button title="Confirmar" />
+        <Button
+          title="Escolher período do aluguél"
+          onPress={handleConfirmRental}
+        />
       </Footer>
     </Container>
   );
