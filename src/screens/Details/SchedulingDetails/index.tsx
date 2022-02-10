@@ -1,19 +1,17 @@
-import React from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Feather } from '@expo/vector-icons';
 
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useTheme } from 'styled-components';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { format } from 'date-fns';
+import { Alert } from 'react-native';
+import { useNetInfo } from '@react-native-community/netinfo';
 import { Accessory } from '../../../components/Accessory';
 import { BackButton } from '../../../components/BackButton';
 import { ImageSlider } from '../../../components/ImageSlider';
 
-import SpeedSvg from '../../../assets/speed.svg';
-import AccelerationSvg from '../../../assets/acceleration.svg';
-import ForceSvg from '../../../assets/force.svg';
-import GasolineSvg from '../../../assets/gasoline.svg';
-import ExchangeSvg from '../../../assets/exchange.svg';
-import PeopleSvg from '../../../assets/people.svg';
+import { accessoryIcons } from '../../../utils/accessoryIcons';
 
 import {
   Container,
@@ -41,14 +39,69 @@ import {
 } from './styles';
 
 import { Button } from '../../../components/Button';
+import { CarDTO } from '../../../dtos/CarDTO';
+import { getPlatformDate } from '../../../utils/getPlatformDate';
+import { api } from '../../../services/api';
+
+interface SchedulingDetailsParams {
+  car: CarDTO;
+  dates: string[];
+}
 
 export const SchedulingDetails: React.FC = () => {
   const { colors } = useTheme();
   const { navigate } = useNavigation();
+  const { params } = useRoute();
+  const netInfo = useNetInfo();
 
-  function handleConfirmRental() {
-    navigate('SchedulingComplete');
-  }
+  const [updatedCar, setUpdatedCar] = useState<CarDTO>({} as CarDTO);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const { car, dates } = params as SchedulingDetailsParams;
+
+  const rentTotal = car.price * dates.length;
+  const formattedPeriod = {
+    start: format(getPlatformDate(new Date(dates[0])), 'dd/MM/yyyy'),
+    end: format(
+      getPlatformDate(new Date(dates[dates.length - 1])),
+      'dd/MM/yyyy',
+    ),
+  };
+
+  const handleConfirmRental = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      await api.post('rentals', {
+        user_id: 1,
+        car_id: car.id,
+        start_date: new Date(dates[0]),
+        end_date: new Date(dates[dates.length - 1]),
+        total: rentTotal,
+      });
+
+      navigate(
+        'Confirmation' as never,
+        {
+          title: 'Carro alugado!',
+          message: 'Agora você só precisa ir\naté a concessionária da RENTX',
+          nextScreen: 'Home',
+        } as never,
+      );
+    } catch (err) {
+      Alert.alert('Não foi possível confirmar o agendamento');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [car.id, dates, navigate, rentTotal]);
+
+  useEffect(() => {
+    async function fetchCarUpdated() {
+      const response = await api.get(`cars/${car.id}`);
+      setUpdatedCar(response.data);
+    }
+
+    if (netInfo.isConnected) fetchCarUpdated();
+  }, [car.id, netInfo.isConnected]);
 
   return (
     <Container>
@@ -58,33 +111,38 @@ export const SchedulingDetails: React.FC = () => {
 
       <CarImages>
         <ImageSlider
-          imagesUrl={[
-            'https://freepngimg.com/thumb/audi/35227-5-audi-rs5-red.png',
-          ]}
+          imagesUrl={
+            updatedCar.photos
+              ? updatedCar.photos
+              : [{ id: car.thumbnail, photo: car.thumbnail }]
+          }
         />
       </CarImages>
 
       <Content>
         <Details>
           <Description>
-            <Subtitle>Lamborghini</Subtitle>
-            <Name>Huracan</Name>
+            <Subtitle>{car.brand}</Subtitle>
+            <Name>{car.name}</Name>
           </Description>
 
           <Rent>
-            <Subtitle>Ao dia</Subtitle>
-            <Price>R$ 580</Price>
+            <Subtitle>{car.period}</Subtitle>
+            <Price>R$ {car.price}</Price>
           </Rent>
         </Details>
 
-        <Accessories>
-          <Accessory name="380km/h" icon={SpeedSvg} />
-          <Accessory name="3.2s" icon={AccelerationSvg} />
-          <Accessory name="800 HP" icon={ForceSvg} />
-          <Accessory name="Gasolina HP" icon={GasolineSvg} />
-          <Accessory name="Auto" icon={ExchangeSvg} />
-          <Accessory name="2 pessoas" icon={PeopleSvg} />
-        </Accessories>
+        {updatedCar.accessories && (
+          <Accessories>
+            {updatedCar.accessories.map(accessory => (
+              <Accessory
+                key={accessory.type}
+                name={accessory.name}
+                icon={accessoryIcons[accessory.type]}
+              />
+            ))}
+          </Accessories>
+        )}
 
         <RentalPeriod>
           <CalendarIcon>
@@ -93,7 +151,7 @@ export const SchedulingDetails: React.FC = () => {
 
           <DateInfo>
             <Title>De</Title>
-            <TextDetail>18/06/21</TextDetail>
+            <TextDetail>{formattedPeriod.start}</TextDetail>
           </DateInfo>
 
           <Feather
@@ -104,15 +162,17 @@ export const SchedulingDetails: React.FC = () => {
 
           <DateInfo>
             <Title>Até</Title>
-            <TextDetail>18/06/21</TextDetail>
+            <TextDetail>{formattedPeriod.end}</TextDetail>
           </DateInfo>
         </RentalPeriod>
 
         <RentalPrice>
           <Title>Total</Title>
           <RentalPriceDetails>
-            <TextDetail>R$ 580 x3 diárias</TextDetail>
-            <RentalPriceTotal>R$ 2.900</RentalPriceTotal>
+            <TextDetail>
+              R$ {car.price} x{dates.length} diárias
+            </TextDetail>
+            <RentalPriceTotal>R$ {rentTotal}</RentalPriceTotal>
           </RentalPriceDetails>
         </RentalPrice>
       </Content>
@@ -122,6 +182,8 @@ export const SchedulingDetails: React.FC = () => {
           title="Alugar agora"
           color={colors.success}
           onPress={handleConfirmRental}
+          isLoading={isLoading}
+          enabled={!isLoading}
         />
       </Footer>
     </Container>

@@ -1,10 +1,14 @@
 import { StatusBar } from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
 import styled from 'styled-components/native';
+import Animated from 'react-native-reanimated';
 
 export const Container = styled.View`
   flex: 1;
+  background-color: ${({ theme }) => theme.colors.background_secondary};
 `;
+
+export const HeaderContainer = styled(Animated.View)``;
 
 export const Header = styled.View`
   flex-direction: row;
@@ -12,21 +16,25 @@ export const Header = styled.View`
   align-items: center;
 
   position: absolute;
-  margin-top: ${StatusBar.currentHeight + RFValue(32)}px;
+  margin-top: ${Number(StatusBar.currentHeight) + RFValue(32)}px;
   margin-left: ${RFValue(24)}px;
 `;
 
+export const CarImageContainer = styled(Animated.View)``;
+
 export const CarImages = styled.View`
-  margin-top: ${StatusBar.currentHeight + RFValue(40)}px;
+  margin-top: ${Number(StatusBar.currentHeight) + RFValue(40)}px;
 `;
 
-export const Content = styled.ScrollView.attrs({
+export const Content = styled(Animated.ScrollView).attrs({
   contentContainerStyle: {
     padding: RFValue(16),
     alignItems: 'center',
   },
   showsVerticalScrollIndicator: false,
-})``;
+})`
+  background-color: ${({ theme }) => theme.colors.background_secondary};
+`;
 
 export const Details = styled.View`
   width: 96%;
@@ -71,7 +79,5 @@ export const Accessories = styled.View`
 `;
 
 export const Footer = styled.View`
-  background-color: ${({ theme }) => theme.colors.background_primary};
-
   padding: ${RFValue(24)}px;
 `;

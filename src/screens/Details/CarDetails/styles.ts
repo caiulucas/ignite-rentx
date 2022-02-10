@@ -10,3 +10,11 @@ export const About = styled.Text`
   line-height: ${RFValue(25)}px;
   margin-top: ${RFValue(24)}px;
 `;
+
+export const OfflineInfo = styled.Text`
+  font-family: ${({ theme }) => theme.fonts.primary_400};
+  font-size: ${RFValue(10)}px;
+  color: ${({ theme }) => theme.colors.main};
+
+  text-align: center;
+`;

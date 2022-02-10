@@ -1,5 +1,6 @@
 import React from 'react';
 import { SvgProps } from 'react-native-svg';
+import { useTheme } from 'styled-components';
 
 import { Container, Name } from './styles';
 
@@ -9,9 +10,11 @@ interface AccessoryProps {
 }
 
 export const Accessory: React.FC<AccessoryProps> = ({ name, icon: Icon }) => {
+  const { colors } = useTheme();
+
   return (
     <Container>
-      <Icon width={32} height={32} />
+      <Icon width={32} height={32} fill={colors.title} />
       <Name>{name}</Name>
     </Container>
   );

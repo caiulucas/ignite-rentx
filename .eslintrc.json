@@ -37,6 +37,7 @@
     "no-use-before-define": "off",    
     "import/extensions": ["error", "never"],
     "import/prefer-default-export": "off",
+    "no-param-reassign": "off",
     "react/prop-types": 0,
     "react/style-prop-object": "off",
     "react/jsx-props-no-spreading": "off",

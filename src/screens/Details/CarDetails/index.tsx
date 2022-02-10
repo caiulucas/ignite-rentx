@@ -1,15 +1,18 @@
-import React from 'react';
-import { useNavigation } from '@react-navigation/native';
+import React, { useState, useEffect } from 'react';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import {
+  Extrapolate,
+  interpolate,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  useSharedValue,
+} from 'react-native-reanimated';
+import { useNetInfo } from '@react-native-community/netinfo';
+
 import { Accessory } from '../../../components/Accessory';
 import { BackButton } from '../../../components/BackButton';
 import { ImageSlider } from '../../../components/ImageSlider';
-
-import SpeedSvg from '../../../assets/speed.svg';
-import AccelerationSvg from '../../../assets/acceleration.svg';
-import ForceSvg from '../../../assets/force.svg';
-import GasolineSvg from '../../../assets/gasoline.svg';
-import ExchangeSvg from '../../../assets/exchange.svg';
-import PeopleSvg from '../../../assets/people.svg';
+import { api } from '../../../services/api';
 
 import {
   Container,
@@ -24,66 +27,119 @@ import {
   Price,
   Accessories,
   Footer,
+  HeaderContainer,
+  CarImageContainer,
 } from '../styles';
-import { About } from './styles';
+import { About, OfflineInfo } from './styles';
 
 import { Button } from '../../../components/Button';
+import { CarDTO } from '../../../dtos/CarDTO';
+import { Car as CarModel } from '../../../database/models/car';
+import { accessoryIcons } from '../../../utils/accessoryIcons';
 
 export const CarDetails: React.FC = () => {
   const { navigate } = useNavigation();
+  const { params } = useRoute();
+  const { car } = params as { car: CarDTO };
+  const netInfo = useNetInfo();
+
+  const [updatedCar, setUpdatedCar] = useState<CarDTO>({} as CarDTO);
+
+  const scrollY = useSharedValue(0);
+  const scrollHandler = useAnimatedScrollHandler(event => {
+    scrollY.value = event.contentOffset.y;
+  });
+
+  const headerStyleAnimation = useAnimatedStyle(() => {
+    return {
+      height: interpolate(
+        scrollY.value,
+        [0, 200],
+        [250, 50],
+        Extrapolate.CLAMP,
+      ),
+    };
+  });
+
+  const sliderCarsStyleAnimation = useAnimatedStyle(() => {
+    return {
+      opacity: interpolate(scrollY.value, [0, 150], [1, 0]),
+    };
+  });
 
   function handleConfirmRental() {
-    navigate('Scheduling');
+    navigate('Scheduling' as never, { car } as never);
   }
+
+  useEffect(() => {
+    async function fetchCarUpdated() {
+      const response = await api.get(`cars/${car.id}`);
+      setUpdatedCar(response.data);
+    }
+
+    if (netInfo.isConnected) fetchCarUpdated();
+  }, [car.id, netInfo.isConnected]);
 
   return (
     <Container>
-      <Header>
-        <BackButton />
-      </Header>
+      <HeaderContainer style={headerStyleAnimation}>
+        <Header>
+          <BackButton />
+        </Header>
 
-      <CarImages>
-        <ImageSlider
-          imagesUrl={[
-            'https://freepngimg.com/thumb/audi/35227-5-audi-rs5-red.png',
-          ]}
-        />
-      </CarImages>
+        <CarImageContainer style={sliderCarsStyleAnimation}>
+          <CarImages>
+            <ImageSlider
+              imagesUrl={
+                updatedCar.photos
+                  ? updatedCar.photos
+                  : [{ id: car.thumbnail, photo: car.thumbnail }]
+              }
+            />
+          </CarImages>
+        </CarImageContainer>
+      </HeaderContainer>
 
-      <Content>
+      <Content onScroll={scrollHandler} scrollEventThrottle={16}>
         <Details>
           <Description>
-            <Subtitle>Lamborghini</Subtitle>
-            <Name>Huracan</Name>
+            <Subtitle>{car.brand}</Subtitle>
+            <Name>{car.name}</Name>
           </Description>
 
           <Rent>
-            <Subtitle>Ao dia</Subtitle>
-            <Price>R$ 580</Price>
+            <Subtitle>{car.period}</Subtitle>
+            <Price>R$ {netInfo.isConnected ? car.price : '...'}</Price>
           </Rent>
         </Details>
 
-        <Accessories>
-          <Accessory name="380km/h" icon={SpeedSvg} />
-          <Accessory name="3.2s" icon={AccelerationSvg} />
-          <Accessory name="800 HP" icon={ForceSvg} />
-          <Accessory name="Gasolina HP" icon={GasolineSvg} />
-          <Accessory name="Auto" icon={ExchangeSvg} />
-          <Accessory name="2 pessoas" icon={PeopleSvg} />
-        </Accessories>
+        {updatedCar.accessories && (
+          <Accessories>
+            {updatedCar.accessories.map(accessory => (
+              <Accessory
+                key={accessory.type}
+                name={accessory.name}
+                icon={accessoryIcons[accessory.type]}
+              />
+            ))}
+          </Accessories>
+        )}
 
-        <About>
-          Este automóvel desportivo. Surgiu do lendário touro de lide indultado
-          na praça Real Maestranza de Sevilla. É um belíssimo carro para quem
-          gosta de acelerar.
-        </About>
+        <About>{car.about}</About>
       </Content>
 
       <Footer>
         <Button
-          title="Escolher período do aluguél"
+          title="Escolher período do aluguel"
+          enabled={Boolean(netInfo.isConnected)}
           onPress={handleConfirmRental}
         />
+
+        {!netInfo.isConnected && (
+          <OfflineInfo>
+            Conecte-se à internet para ver mais detalhes e agendar seu carro
+          </OfflineInfo>
+        )}
       </Footer>
     </Container>
   );

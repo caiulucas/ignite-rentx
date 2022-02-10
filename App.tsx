@@ -12,6 +12,8 @@ import { ThemeProvider } from 'styled-components';
 import AppLoading from 'expo-app-loading';
 import { StatusBar } from 'expo-status-bar';
 
+import { AppProvider } from './src/hooks';
+
 import theme from './src/styles/theme';
 import { Routes } from './src/routes';
 
@@ -28,8 +30,10 @@ export const App: React.FC = () => {
 
   return (
     <ThemeProvider theme={theme}>
-      <StatusBar style="auto" />
-      <Routes />
+      <AppProvider>
+        <StatusBar style="inverted" />
+        <Routes />
+      </AppProvider>
     </ThemeProvider>
   );
 };

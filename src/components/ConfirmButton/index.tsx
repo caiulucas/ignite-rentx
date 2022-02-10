@@ -3,11 +3,15 @@ import React from 'react';
 
 import { Container, Title } from './styles';
 
-export const ConfirmButton: React.FC = () => {
+interface ConfirmButtonProps {
+  nextScreen: string;
+}
+
+export const ConfirmButton: React.FC<ConfirmButtonProps> = ({ nextScreen }) => {
   const { navigate } = useNavigation();
 
   function handleConfirmRental() {
-    navigate('Home');
+    navigate(nextScreen);
   }
 
   return (

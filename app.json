@@ -2,9 +2,21 @@
   "expo": {
     "name": "rentx",
     "slug": "rentx",
+    "splash": {
+      "image": "./assets/splash.png",
+      "backgroundColor": "#1b1b1f"
+    },
     "version": "1.0.0",
     "assetBundlePatterns": [
       "**/*"
+    ],
+    "plugins": [
+      [  
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to let you share them with your friends."
+        }
+      ]
     ]
   },
   "name": "rentx"
